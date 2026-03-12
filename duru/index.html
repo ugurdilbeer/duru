@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="tr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sana</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                font-family: "Cormorant Garamond", Georgia, serif;
+            }
+
+            /* ── Fade-in on scroll ── */
+            .fade-in {
+                opacity: 0;
+                transform: translateY(36px);
+                transition:
+                    opacity 2s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 2s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+            .fade-in.visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            /* ── Hero text entrance ── */
+            .hero-entrance {
+                opacity: 0;
+                transform: translateY(22px);
+                animation: heroIn 2.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s
+                    forwards;
+            }
+
+            @keyframes heroIn {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* ── Scroll hint ── */
+            .scroll-hint {
+                opacity: 0;
+                animation: hintAppear 1s ease 4.5s forwards;
+            }
+
+            @keyframes hintAppear {
+                to {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes arrowBounce {
+                0%,
+                100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(8px);
+                }
+            }
+
+            .arrow-bounce {
+                animation: arrowBounce 2.2s ease-in-out infinite;
+            }
+
+            /* ── Thin vertical line divider ── */
+            .vline {
+                width: 1px;
+                height: 90px;
+                margin: 0 auto;
+                background: linear-gradient(
+                    to bottom,
+                    transparent,
+                    rgba(255, 255, 255, 0.18) 30%,
+                    rgba(255, 255, 255, 0.18) 70%,
+                    transparent
+                );
+            }
+
+            /* ── Short horizontal rule ── */
+            .hline {
+                width: 28px;
+                height: 1px;
+                margin: 2.4rem auto;
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            /* ── Music overlay ── */
+            .music-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgb(0, 0, 0);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2rem;
+                z-index: 999;
+                cursor: pointer;
+                transition: opacity 1.2s ease;
+            }
+
+            .music-overlay.hide {
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .music-overlay-note {
+                font-size: clamp(3rem, 8vw, 5rem);
+                color: rgba(255, 255, 255, 0.7);
+                animation: notePulse 2s ease-in-out infinite;
+            }
+
+            @keyframes notePulse {
+                0%, 100% { opacity: 0.5; transform: scale(0.95); }
+                50%       { opacity: 1;   transform: scale(1.05); }
+            }
+
+            .music-overlay-text {
+                font-size: clamp(0.85rem, 2.5vw, 1rem);
+                font-weight: 300;
+                color: rgba(255, 255, 255, 0.4);
+                letter-spacing: 5px;
+                text-transform: uppercase;
+            }
+
+            /* ── Music toggle ── */
+            .music-toggle {
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                width: 38px;
+                height: 38px;
+                border-radius: 50%;
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                background: rgba(0, 0, 0, 0.7);
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 15px;
+                cursor: pointer;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(8px);
+                transition: border-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+                z-index: 100;
+            }
+
+            .music-toggle:hover {
+                border-color: rgba(255, 255, 255, 0.55);
+                color: rgba(255, 255, 255, 0.9);
+            }
+
+            .music-toggle.muted {
+                opacity: 0.35;
+            }
+
+            /* ── Location button ── */
+            .loc-btn {
+                display: inline-block;
+                padding: 13px 40px;
+                border: 1px solid rgba(255, 255, 255, 0.32);
+                color: rgb(225, 225, 225);
+                font-family: "Cormorant Garamond", Georgia, serif;
+                font-size: 12px;
+                letter-spacing: 4.5px;
+                text-transform: uppercase;
+                text-decoration: none;
+                background: transparent;
+                transition:
+                    border-color 0.6s ease,
+                    letter-spacing 0.6s ease,
+                    background 0.6s ease,
+                    color 0.4s ease;
+            }
+
+            .loc-btn:hover {
+                background: rgba(255, 255, 255, 0.06);
+                border-color: rgba(255, 255, 255, 0.65);
+                letter-spacing: 7px;
+                color: rgb(255, 255, 255);
+            }
+
+        </style>
+    </head>
+
+    <body class="bg-black text-white overflow-x-hidden">
+        <!-- ── Audio player ── -->
+        <audio id="bgAudio" loop preload="auto" style="display:none;">
+            <source src="Sezen AKSU - Küçüğüm.mp3" type="audio/mpeg" />
+        </audio>
+
+        <!-- ── Music toggle button ── -->
+        <button class="music-toggle" id="musicToggle" title="Müzik aç / kapat">♪</button>
+
+        <!-- ── Music overlay (ilk ekran) ── -->
+        <div class="music-overlay" id="musicOverlay">
+            <div class="music-overlay-note">♪</div>
+            <div class="music-overlay-text">dokunmak için tıkla</div>
+        </div>
+
+
+        <!-- ════════════════════════════════════════════
+       BÖLÜM 1  ─  Hero cümle
+  ════════════════════════════════════════════ -->
+        <section
+            style="
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 4rem 1.5rem;
+                text-align: center;
+                position: relative;
+            "
+        >
+            <div class="hero-entrance" style="max-width: 620px">
+                <p
+                    style="
+                        font-size: clamp(1.45rem, 4.5vw, 2.25rem);
+                        font-weight: 300;
+                        font-style: italic;
+                        color: rgb(238, 238, 238);
+                        line-height: 1.75;
+                        letter-spacing: 0.03em;
+                    "
+                >
+                    "Dil söylemez yüreğin harbini."
+                </p>
+            </div>
+
+            <!-- Scroll hint -->
+            <div
+                class="scroll-hint"
+                style="
+                    position: absolute;
+                    bottom: 2.8rem;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 0.6rem;
+                "
+            >
+                <span
+                    style="
+                        font-size: 9px;
+                        letter-spacing: 3.5px;
+                        color: rgba(255, 255, 255, 0.22);
+                        text-transform: uppercase;
+                        font-family: &quot;Cormorant Garamond&quot;, serif;
+                    "
+                    >aşağı kaydır</span
+                >
+                <svg
+                    class="arrow-bounce"
+                    width="14"
+                    height="22"
+                    viewBox="0 0 14 22"
+                    fill="none"
+                    style="opacity: 0.22"
+                >
+                    <line
+                        x1="7"
+                        y1="0"
+                        x2="7"
+                        y2="18"
+                        stroke="white"
+                        stroke-width="1"
+                    />
+                    <path
+                        d="M1 12 L7 19 L13 12"
+                        stroke="white"
+                        stroke-width="1"
+                        fill="none"
+                    />
+                </svg>
+            </div>
+        </section>
+
+        <!-- ── Divider ── -->
+        <div style="padding: 1.5rem 0">
+            <div class="vline fade-in"></div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+       BÖLÜM 2  ─  O gece
+  ════════════════════════════════════════════ -->
+        <section
+            style="
+                min-height: 80vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 5rem 1.5rem;
+                text-align: center;
+            "
+        >
+            <div class="fade-in" style="max-width: 540px">
+                <p
+                    style="
+                        font-size: clamp(1.05rem, 3vw, 1.35rem);
+                        font-weight: 300;
+                        color: rgb(188, 188, 188);
+                        line-height: 2.5;
+                        letter-spacing: 0.045em;
+                    "
+                >
+                    Etrafımızdaki her şeyi bir anlığına sessize alıp,<br />
+                    sadece o gece paylaştığımız saf enerjiye odaklanmak istedim.
+                </p>
+                <div class="hline"></div>
+                <p
+                    style="
+                        font-size: clamp(0.97rem, 2.6vw, 1.2rem);
+                        font-weight: 300;
+                        font-style: italic;
+                        color: rgb(140, 140, 140);
+                        line-height: 2.5;
+                        letter-spacing: 0.045em;
+                    "
+                >
+                    Tatlılığın ve seni her öptüğümde<br />
+                    yüzünde yakaladığım o içten gülümseme...
+                </p>
+            </div>
+        </section>
+
+        <!-- ── Divider ── -->
+        <div style="padding: 1.5rem 0">
+            <div class="vline fade-in"></div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+       BÖLÜM 3  ─  Cumartesi
+  ════════════════════════════════════════════ -->
+        <section
+            style="
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 5rem 1.5rem;
+                text-align: center;
+            "
+        >
+            <div style="max-width: 580px">
+                <p
+                    class="fade-in"
+                    style="
+                        font-size: clamp(1.05rem, 3vw, 1.28rem);
+                        font-weight: 300;
+                        color: rgb(162, 162, 162);
+                        line-height: 2.6;
+                        letter-spacing: 0.045em;
+                        margin-bottom: 2rem;
+                    "
+                >
+                    Güzel hislerin yerini; içimi susturan, tarif edemediğim bir boşluk ve kırgınlık alsa da...
+                </p>
+
+                <p
+                    class="fade-in"
+                    style="
+                        font-size: clamp(1.05rem, 3vw, 1.28rem);
+                        font-weight: 300;
+                        color: rgb(195, 195, 195);
+                        line-height: 2.6;
+                        letter-spacing: 0.045em;
+                        margin-bottom: 2.5rem;
+                    "
+                >
+                    Eğer tüm bu karmaşanın ötesinde,<br />
+                    her şeyi olduğu gibi konuşmak istersen;
+                </p>
+
+                <p
+                    class="fade-in"
+                    style="
+                        font-size: clamp(1.25rem, 3.8vw, 1.6rem);
+                        font-weight: 400;
+                        font-style: italic;
+                        color: rgb(238, 238, 238);
+                        line-height: 2.1;
+                        letter-spacing: 0.03em;
+                        margin-bottom: 3rem;
+                    "
+                >
+                    14 Mart Cumartesi saat 16:30'da<br />
+                    E2'nin oradaki veya İşletme Fakültesinin -Sarı Binalar- arkasındaki banklarda seni bekliyor olacağım.
+                </p>
+
+                <p
+                    class="fade-in"
+                    style="
+                        font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+                        font-weight: 300;
+                        color: rgb(112, 112, 112);
+                        line-height: 2.6;
+                        letter-spacing: 0.045em;
+                        margin-bottom: 4rem;
+                    "
+                >
+                    Gelirsen, sana mutlak dürüstlüğümle her şeyi anlatmak ve konuşmak
+                    isterim.<br />
+                    Gelmezsen, bu sayfa sadece dijital bir anı olarak
+                    kalacak.
+                </p>
+
+
+        </section>
+
+        <!-- ── ASCII art ── -->
+        <div class="fade-in" style="
+            position: relative;
+            display: flex;
+            justify-content: center;
+            padding: 0 1.5rem;
+            margin-top: 2rem;
+        ">
+            <div style="position: relative; max-width: min(480px, 88vw); width: 100%;">
+                <img
+                    src="duru.png"
+                    alt=""
+                    style="
+                        width: 100%;
+                        height: auto;
+                        display: block;
+                        opacity: 0.5;
+                        filter: grayscale(100%);
+                    "
+                />
+                <!-- üst ve alt gradyan -->
+                <div style="
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(
+                        to bottom,
+                        rgb(0,0,0) 0%,
+                        transparent 14%,
+                        transparent 82%,
+                        rgb(0,0,0) 100%
+                    );
+                    pointer-events: none;
+                "></div>
+                <!-- yan gradyanlar -->
+                <div style="
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(
+                        to right,
+                        rgb(0,0,0) 0%,
+                        transparent 12%,
+                        transparent 88%,
+                        rgb(0,0,0) 100%
+                    );
+                    pointer-events: none;
+                "></div>
+            </div>
+        </div>
+
+        <div style="height: 80px"></div>
+
+        <!-- ════════════════════════════════════════════
+       JAVASCRIPT
+  ════════════════════════════════════════════ -->
+        <script>
+            /* ── 1. Scroll fade-in via IntersectionObserver ── */
+            var io = new IntersectionObserver(
+                function (entries) {
+                    entries.forEach(function (e) {
+                        if (e.isIntersecting) e.target.classList.add("visible");
+                    });
+                },
+                { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
+            );
+
+            document.querySelectorAll(".fade-in").forEach(function (el) {
+                io.observe(el);
+            });
+
+            /* ── 2. Audio player ── */
+            var audio       = document.getElementById("bgAudio");
+            var overlay     = document.getElementById("musicOverlay");
+            var musicToggle = document.getElementById("musicToggle");
+
+            audio.volume = 0.13;
+
+            overlay.addEventListener("click", function () {
+                audio.play().catch(function () {});
+                overlay.classList.add("hide");
+                setTimeout(function () {
+                    overlay.style.display = "none";
+                    musicToggle.style.display = "flex";
+                }, 1300);
+            });
+
+            musicToggle.addEventListener("click", function () {
+                if (audio.paused) {
+                    audio.play().catch(function () {});
+                    musicToggle.classList.remove("muted");
+                } else {
+                    audio.pause();
+                    musicToggle.classList.add("muted");
+                }
+            });
+        </script>
+    </body>
+</html>
